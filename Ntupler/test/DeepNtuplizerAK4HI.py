@@ -204,6 +204,8 @@ process.pfSecondaryVertexTagInfos = pfSecondaryVertexTagInfos.clone()
 from RecoVertex.AdaptiveVertexFinder.inclusiveVertexing_cff import inclusiveCandidateVertexFinder, candidateVertexMerger, candidateVertexArbitrator, inclusiveCandidateSecondaryVertices
 process.inclusiveCandidateVertexFinder = inclusiveCandidateVertexFinder.clone(
     tracks = "packedPFCandidates",
+    minHits = 0,
+    minPt = 0.8,
     primaryVertices = "offlineSlimmedPrimaryVertices"
 )
 process.candidateVertexMerger = candidateVertexMerger.clone()
@@ -337,7 +339,9 @@ process.load("DeepNTuples.Ntupler.DeepNtuplizer_cfi")
 process.deepntuplizer.jets = srcJets
 process.deepntuplizer.isPuppiJets = False
 process.deepntuplizer.bDiscriminators = bTagDiscriminators
-process.deepntuplizer.unsubjet_map = cms.InputTag("unsubJetMap")
+process.deepntuplizer.unsubjet_map = "unsubJetMap"
+process.deepntuplizer.genParticles = "hiSignalGenParticles"
+process.deepntuplizer.SVs = "inclusiveCandidateSecondaryVertices"
 
 process.deepntuplizer.isQCDSample = '/QCD_' in options.inputDataset
 process.deepntuplizer.isPythia = 'pythia' in options.inputDataset.lower()

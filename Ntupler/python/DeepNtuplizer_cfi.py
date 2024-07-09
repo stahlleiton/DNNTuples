@@ -20,4 +20,5 @@ deepntuplizer = cms.EDAnalyzer('DeepNtuplizer',
                                 isHerwig      = cms.bool(False),
                                 isMadGraph    = cms.bool(False),
                                 isTrainSample = cms.untracked.bool(True),
+                                unsubjet_map = cms.InputTag(""),
                                 )
