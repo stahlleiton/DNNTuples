@@ -81,7 +81,7 @@ bool JetInfoFiller::fill(const pat::Jet& jet, size_t jetidx, const JetHelper& je
   data.fill<float>("jet_tightIdLepVeto", jetIdTightLepVeto(jet));
 
   // qgl
-  data.fill<float>("jet_qgl", jet.userFloat("qgl"));
+  data.fill<float>("jet_qgl", jet.hasUserFloat("qgl") ? jet.userFloat("qgl") : 0);
 
   for(const auto& disc : btag_discriminators_) {
     std::string name(disc);

@@ -35,7 +35,8 @@ void JetHelper::initializeConstituents(const edm::Handle<reco::CandidateView> &p
         // https://github.com/cms-sw/cmssw/pull/28035
         daughters_.push_back(pfcands->ptrAt(dauPtr.key()));
         // For the Puppi weight, we get it from the new candidate in case it is recomputed
-        puppi_wgt_cache_[dauPtr.key()] = cand->puppiWeight();
+        if (isPuppi_)
+          puppi_wgt_cache_[dauPtr.key()] = cand->puppiWeight();
       }
     }else{
       const auto& candPtr = dauPtr;
@@ -45,7 +46,8 @@ void JetHelper::initializeConstituents(const edm::Handle<reco::CandidateView> &p
       // https://github.com/cms-sw/cmssw/pull/28035
       daughters_.push_back(pfcands->ptrAt(dauPtr.key()));
       // For the Puppi weight, we get it from the new candidate in case it is recomputed
-      puppi_wgt_cache_[dauPtr.key()] = cand->puppiWeight();
+      if (isPuppi_)
+        puppi_wgt_cache_[dauPtr.key()] = cand->puppiWeight();
     }
   }
   // sort by original pt

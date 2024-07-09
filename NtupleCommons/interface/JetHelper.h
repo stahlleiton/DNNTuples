@@ -31,6 +31,8 @@ public:
   const std::vector<reco::CandidatePtr>& getJetConstituents() const { return daughters_; }
   unsigned int numberOfDaughters() const { return daughters_.size(); }
   float getPuppiWeight(const reco::CandidatePtr &cand) const {
+    if (not isPuppi_)
+      return 0;
     auto iter = puppi_wgt_cache_.find(cand.key());
     if (iter == puppi_wgt_cache_.end()){
       throw cms::Exception("[JetHelper::getPuppiWeight] Cannot get puppi wgt!");

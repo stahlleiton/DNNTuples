@@ -15,6 +15,7 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
+#include "DataFormats/Common/interface/AssociationMap.h"
 
 #include "DeepNTuples/NtupleCommons/interface/TreeWriter.h"
 
@@ -28,6 +29,7 @@ using namespace deepntuples;
 
 class DeepNtuplizer : public edm::one::EDAnalyzer<edm::one::SharedResources> {
 public:
+  typedef edm::AssociationMap<edm::OneToOne<reco::JetView, reco::JetView> > JetMatchMap;
   explicit DeepNtuplizer(const edm::ParameterSet&);
   ~DeepNtuplizer();
 
@@ -43,6 +45,7 @@ private:
   bool isPuppi = true;
 
   edm::EDGetTokenT<edm::View<pat::Jet>> jetToken_;
+  edm::EDGetTokenT<JetMatchMap> unsubjetMapToken_;
   edm::EDGetTokenT<edm::View<reco::Candidate>> candToken_;
   edm::EDGetTokenT<edm::Association<reco::GenJetCollection>> genJetWithNuMatchToken_;
 
@@ -60,6 +63,7 @@ DeepNtuplizer::DeepNtuplizer(const edm::ParameterSet& iConfig):
     jetR(iConfig.getParameter<double>("jetR")),
     isPuppi(iConfig.getParameter<bool>("isPuppiJets")),
     jetToken_(consumes<edm::View<pat::Jet> >(iConfig.getParameter<edm::InputTag>("jets"))),
+    unsubjetMapToken_(consumes<JetMatchMap>(iConfig.getParameter<edm::InputTag>("unsubjet_map"))),
     candToken_(consumes<edm::View<reco::Candidate>>(iConfig.getParameter<edm::InputTag>("pfcands"))),
     genJetWithNuMatchToken_(consumes<edm::Association<reco::GenJetCollection>>(iConfig.getParameter<edm::InputTag>("genJetsMatch")))
 {
@@ -99,6 +103,7 @@ void DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   edm::Handle<edm::View<pat::Jet>> jets;
   iEvent.getByToken(jetToken_, jets);
+  const auto& unsubjet_map = iEvent.getHandle(unsubjetMapToken_);
 
   edm::Handle<edm::View<reco::Candidate>> candHandle;
   iEvent.getByToken(candToken_, candHandle);
@@ -109,9 +114,16 @@ void DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   for (unsigned idx=0; idx<jets->size(); ++idx){
     bool write_ = true;
 
-    const auto& jet = jets->at(idx); // need to keep the JEC for puppi sdmass corr
+    const auto& jet_ref = jets->refAt(idx); // need to keep the JEC for puppi sdmass corr
+    const auto& unsubjet_ref = unsubjet_map.isValid() ? (*unsubjet_map)[jet_ref] : edm::RefToBase<reco::Jet>();
+    const auto& jet = *(unsubjet_ref.isNonnull() ? dynamic_cast<const pat::Jet*>(unsubjet_ref.get()) : jet_ref.get());
     JetHelper jet_helper(&jet, candHandle, isPuppi);
-    jet_helper.setGenjetWithNu((*genJetWithNuMatchHandle)[jets->refAt(idx)]);
+    if (genJetWithNuMatchHandle.isValid() && genJetWithNuMatchHandle->contains(jet_ref.id()))
+      jet_helper.setGenjetWithNu((*genJetWithNuMatchHandle)[jet_ref]);
+    else if (unsubjet_ref.isNonnull() && genJetWithNuMatchHandle.isValid() && genJetWithNuMatchHandle->contains(unsubjet_ref.id()))
+      jet_helper.setGenjetWithNu((*genJetWithNuMatchHandle)[unsubjet_ref]);
+    else
+      jet_helper.setGenjetWithNu(jet.genJetFwdRef().ref());
 
     for (auto *m : modules_){
       if (!m->fillBranches(jet.correctedJet("Uncorrected"), idx, jet_helper)){
