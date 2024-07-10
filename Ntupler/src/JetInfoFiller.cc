@@ -59,7 +59,7 @@ bool JetInfoFiller::fill(const pat::Jet& jet, size_t jetidx, const JetHelper& je
   float gen_pt = jet.genJet() ? jet.genJet()->pt() : 0;
   data.fill<float>("gen_pt", gen_pt);
 
-  auto flavor = flavorDef.jet_flavour(jet);
+  auto flavor = flavorDef.jet_flavour(jet_helper.jet());
   data.fill<int>("isB", flavor==JetFlavor::B);
   data.fill<int>("isBB", flavor==JetFlavor::BB);
   data.fill<int>("isLeptonicB", flavor==JetFlavor::LeptonicB);

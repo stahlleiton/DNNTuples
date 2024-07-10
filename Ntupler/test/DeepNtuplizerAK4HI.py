@@ -65,19 +65,17 @@ process.TransientTrackBuilderESProducer = cms.ESProducer("TransientTrackBuilderE
                                                          )
 
 # Heavy-ion settings
-from PhysicsTools.PatAlgos.producersHeavyIons.heavyIonJets_cff import PackedPFTowers, hiPuRho, hiSignalGenParticles, allPartons
+from PhysicsTools.PatAlgos.producersHeavyIons.heavyIonJets_cff import PackedPFTowers, hiPuRho, allPartons
 process.PackedPFTowers = PackedPFTowers.clone()
 process.hiPuRho = hiPuRho.clone(
     src = 'PackedPFTowers'
 )
-process.hiSignalGenParticles = hiSignalGenParticles.clone(
-    src = "prunedGenParticles"
+process.allPartons = allPartons.clone(
+    src = 'prunedGenParticles'
 )
-process.allPartons = allPartons.clone()
-from RecoJets.Configuration.RecoGenJets_cff import ak4GenJetsNoNu
-process.ak4GenJetsNoNu = ak4GenJetsNoNu.clone(
-    src = 'packedGenParticlesSignal',
-    rParam = 0.4
+from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
+process.ak4GenJetsWithNu = ak4GenJets.clone(
+    src='packedGenParticles'
 )
 
 # Create unsubtracted reco jets
@@ -92,15 +90,16 @@ process.ak4PFMatchingForakCs0PFpatJetCorrFactors = patJetCorrFactors.clone(
 )
 process.ak4PFMatchingForakCs0PFpatJetPartonMatch = patJetPartonMatch.clone(
     src = 'ak4PFMatchingForakCs0PFJets',
-    matched = 'hiSignalGenParticles',
+    matched = 'prunedGenParticles',
     maxDeltaR = 0.4
 )
 process.ak4PFMatchingForakCs0PFpatJetGenJetMatch = patJetGenJetMatch.clone(
     src = 'ak4PFMatchingForakCs0PFJets',
-    matched = 'ak4GenJetsNoNu',
+    matched = 'ak4GenJetsWithNu',
     maxDeltaR = 0.4
 )
 process.ak4PFMatchingForakCs0PFpatJetPartons = patJetPartons.clone(
+    particles = 'prunedGenParticles',
     partonMode = 'Pythia8'
 )
 process.ak4PFMatchingForakCs0PFpatJetFlavourAssociation =  patJetFlavourAssociation.clone(
@@ -137,12 +136,12 @@ process.akCs0PFpatJetCorrFactors = patJetCorrFactors.clone(
 )
 process.akCs0PFpatJetPartonMatch = patJetPartonMatch.clone(
     src = 'akCs0PFJets',
-    matched = 'hiSignalGenParticles',
+    matched = 'prunedGenParticles',
     maxDeltaR = 0.4
 )
 process.akCs0PFpatJetGenJetMatch = patJetGenJetMatch.clone(
     src = 'akCs0PFJets',
-    matched = 'ak4GenJetsNoNu',
+    matched = 'ak4GenJetsWithNu',
     maxDeltaR = 0.4
 )
 process.akCs0PFpatJetPartonAssociationLegacy = patJetPartonAssociationLegacy.clone(
@@ -152,6 +151,7 @@ process.akCs0PFpatJetFlavourAssociationLegacy = patJetFlavourAssociationLegacy.c
     srcByReference = 'akCs0PFpatJetPartonAssociationLegacy'
 )
 process.akCs0PFpatJetPartons = patJetPartons.clone(
+    particles = 'prunedGenParticles',
     partonMode = 'Pythia8'
 )
 from RecoBTag.ImpactParameter.pfImpactParameterTagInfos_cfi import pfImpactParameterTagInfos
@@ -292,9 +292,8 @@ process.unsubJetMap = cms.EDProducer("JetMatcherDR", source = srcJets, matched =
 process.jetTask = cms.Task(
     process.PackedPFTowers,
     process.hiPuRho,
-    process.hiSignalGenParticles,
     process.allPartons,
-    process.ak4GenJetsNoNu,
+    process.ak4GenJetsWithNu,
     process.ak4PFMatchingForakCs0PFJets,
     process.ak4PFMatchingForakCs0PFpatJetCorrFactors,
     process.ak4PFMatchingForakCs0PFpatJetPartonMatch,
@@ -340,7 +339,6 @@ process.deepntuplizer.jets = srcJets
 process.deepntuplizer.isPuppiJets = False
 process.deepntuplizer.bDiscriminators = bTagDiscriminators
 process.deepntuplizer.unsubjet_map = "unsubJetMap"
-process.deepntuplizer.genParticles = "hiSignalGenParticles"
 process.deepntuplizer.SVs = "inclusiveCandidateSecondaryVertices"
 
 process.deepntuplizer.isQCDSample = '/QCD_' in options.inputDataset

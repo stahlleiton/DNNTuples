@@ -114,10 +114,11 @@ void DeepNtuplizer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   for (unsigned idx=0; idx<jets->size(); ++idx){
     bool write_ = true;
 
-    const auto& jet_ref = jets->refAt(idx); // need to keep the JEC for puppi sdmass corr
+    const auto& jet = jets->at(idx); // need to keep the JEC for puppi sdmass corr
+    const auto& jet_ref = jets->refAt(idx);
     const auto& unsubjet_ref = unsubjet_map.isValid() ? (*unsubjet_map)[jet_ref] : edm::RefToBase<reco::Jet>();
-    const auto& jet = *(unsubjet_ref.isNonnull() ? dynamic_cast<const pat::Jet*>(unsubjet_ref.get()) : jet_ref.get());
-    JetHelper jet_helper(&jet, candHandle, isPuppi);
+    const auto& unsubjet = *(unsubjet_ref.isNonnull() ? dynamic_cast<const pat::Jet*>(unsubjet_ref.get()) : jet_ref.get());
+    JetHelper jet_helper(&unsubjet, candHandle, isPuppi);
     if (genJetWithNuMatchHandle.isValid() && genJetWithNuMatchHandle->contains(jet_ref.id()))
       jet_helper.setGenjetWithNu((*genJetWithNuMatchHandle)[jet_ref]);
     else if (unsubjet_ref.isNonnull() && genJetWithNuMatchHandle.isValid() && genJetWithNuMatchHandle->contains(unsubjet_ref.id()))
